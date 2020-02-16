@@ -1,4 +1,6 @@
-# please read me  
-## read me  
-### me  
-~~***sorry nothing to read***~~
+# 优课 (yooc.me) 自动答题
+
+# 说明
+
+- 需要题库
+- 尚未完成
