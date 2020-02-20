@@ -1,5 +1,7 @@
 .idea/
+.vscode/
 *.log
 __pycache__/
 /QuestionsBank/
 /QuestionsBank.json
+config.*
