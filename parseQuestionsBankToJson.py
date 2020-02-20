@@ -4,6 +4,7 @@ import re
 
 
 def parseQuestionsFromTxt(questions):
+    questions = re.sub('([ABCDEFG])\t', r'\1、', questions)
     questions = onlyKeepChineseWords(questions)
     questions = re.split(r'\n+?[0-9]+、', questions)  # 分割题目
     del questions[0]
@@ -24,9 +25,14 @@ def parseQuestionsFromTxt(questions):
             # ABCDEFG
             for i in range(6):
                 parts = re.split('{}[、.]'.format(chr(65 + i)), question)
+                if len(parts) == 1 and i < 4:  # ABCD
+                    parts = question.split('{}\t'.format(chr(65 + i)))
                 if len(parts) == 1:  # 循环到不存在的选项
                     lastParts = re.search('(.+?)(参考)?答案(A?B?C?D?E?F?G?)', question)
-                    if lastParts is not None:  # 答案在尾部
+                    if lastParts is None:
+                        options.append(parts[0])
+                    else:
+                        # 答案在尾部
                         answers = lastParts.group(3)
                         options.append(lastParts.group(1))
                     break
@@ -52,10 +58,17 @@ def parseQuestionsFromHtml(questions):
     del questions[-1]
     _questions = {}
     for question in questions:
-        answers = re.findall(r'<span[\n\s]+?class="cls_005">(.+?)</span>', question)
-        question = re.sub(r'<span[\n\s]+?class="cls_005">(.+?)</span>', '', question)
+        # 答案标签 class
+        answers = re.findall(r'<span[\n\s]+class="cls_005">(.+?)</span>'
+                             r'([\n\s]*<span[\n\s]+class="cls_007">(.+?)</span>)?', question)
+        # 合并
+        answers = [answer[0] + answer[2] for answer in answers]
+        # 移除空白填空
+        # answers = list(filter(lambda item: not item.isspace(), answers))
+        question = re.sub(r'<span[\n\s]+class="cls_00[57]">.+?</span>', '', question)
         question = re.sub(r'<.+?>', '', question, flags=re.S)
-        question = re.sub(r'[^\u4e00-\u9fa5.a-zA-Z0-9]', '', question)
+        # 只保留汉字,数字,字母等字符, 适用于填空题
+        question = re.sub(r'[^\u4e00-\u9fa5、.a-zA-Z0-9]', '', question)
         _questions[question] = answers
         # questions = []
         # soup = BeautifulSoup(file, "lxml")
@@ -78,7 +91,8 @@ with os.scandir('QuestionsBank') as files:
         with open(entry) as file:
             if file.name.endswith('.html'):
                 questionsBank = {**questionsBank, **parseQuestionsFromHtml(file.read())}
-            questionsBank = {**questionsBank, **parseQuestionsFromTxt(file.read())}
+            else:
+                questionsBank = {**questionsBank, **parseQuestionsFromTxt(file.read())}
 
 with open('./QuestionsBank.json', 'w') as file:
     json.dump(questionsBank, file, indent=4, ensure_ascii=False)
