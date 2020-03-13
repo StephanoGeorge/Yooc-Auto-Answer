@@ -3,7 +3,6 @@ import logging
 import os
 import re
 import time
-from datetime import datetime
 from random import random
 
 import requests
@@ -71,14 +70,15 @@ def submitAnswer(sess, detailUrl, answers):
 
 
 if __name__ == '__main__':
-    fileName = os.path.expanduser('~/.yoocAutoAnswer')
+    fileName = os.path.expanduser('~/.config/.yoocAutoAnswer')
+    print('\u4e3a\u9632\u6b62\u5546\u7528,'
+          '\u4f7f\u7528\u95f4\u9694\u5fc5\u987b'
+          '\u5927\u4e8e\u4e94\u5c0f\u65f6')
     sess = requests.Session()
     if os.path.exists(fileName):
         with open(fileName) as f:
-            if time.time() - float(f.read()) < 18 * 10 ** 6:
-                print('\u4e3a\u9632\u6b62\u5546\u7528,'
-                      '\u4f7f\u7528\u95f4\u9694\u5fc5\u987b'
-                      '\u5927\u4e8e\u4e94\u5c0f\u65f6')
+            r = f.read()
+            if float(r) != 0 and time.time() - float(r) < 18e6:
                 os._exit(0)
     with open('./QuestionsBank.json') as file:
         questionsBank = json.load(file)
@@ -94,7 +94,7 @@ if __name__ == '__main__':
     detailUrl = getDetailUrl(examsUrl, sess)
     examHtml = sess.get(detailUrl, headers={'Referer': examsUrl}).text
     ###############################################
-    with open('./detail.html', 'w') as f:
+    with open('./log/detail.html', 'w') as f:
         f.write(examHtml)
     startTime = time.time()
     examHtml = examHtml.replace('\n', '')
@@ -109,7 +109,7 @@ if __name__ == '__main__':
             answers.append({questionId: {'1': questionsBank['1'][questionId]}})
             continue
         questionContent = re.sub(r'q-cnt crt">[0-9]+、<span>\[[0-9]+分\]', '', questionContent)
-        if 'input type="text"' in questionContent:
+        if '<input type="text">' in questionContent:
             # 填空题
             questionContent = re.sub(r'<.+?>', '', questionContent, flags=re.S)
             questionContent = re.sub(r'[^\u4e00-\u9fa5、.a-zA-Z0-9]', '', questionContent)

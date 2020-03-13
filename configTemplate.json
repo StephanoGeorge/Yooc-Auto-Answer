@@ -1,0 +1,19 @@
+{
+    "accounts": [
+        {
+            "cookies": {
+                "csrftoken": "123",
+                "sessionid": "abc"
+            },
+            "examsUrl": "https://www.yooc.me/group/123456/exams"
+        },
+        {
+            "cookies": {
+                "csrftoken": "456",
+                "sessionid": "def"
+            },
+            "examsUrl": "https://www.yooc.me/group/123456/exams"
+        }
+    ],
+    "questionsBankAmount": 300
+}
