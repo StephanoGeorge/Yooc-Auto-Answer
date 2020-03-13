@@ -1,4 +1,5 @@
-import json
+# -*- coding: utf-8 -*-
+import yaml
 import os
 import re
 
@@ -84,15 +85,15 @@ def onlyKeepChineseWords(string):
     return re.sub(r'[^\u4e00-\u9fa5、.a-zA-Z0-9\n]', '', string)
 
 
-questionsBank = {}
+questionBanks = {}
 
 with os.scandir('QuestionBanks') as files:
     for entry in files:
-        with open(entry) as file:
+        with open(entry, 'r', encoding='UTF-8') as file:
             if file.name.endswith('.html'):
-                questionsBank = {**questionsBank, **parseQuestionsFromHtml(file.read())}
+                questionBanks = {**questionBanks, **parseQuestionsFromHtml(file.read())}
             else:
-                questionsBank = {**questionsBank, **parseQuestionsFromTxt(file.read())}
+                questionBanks = {**questionBanks, **parseQuestionsFromTxt(file.read())}
 
-with open('QuestionBanks.json', 'w') as file:
-    json.dump(questionsBank, file, indent=4, ensure_ascii=False)
+with open('QuestionBanks.yaml', 'w', encoding='UTF-8') as file:
+    yaml.safe_dump(questionBanks, file, indent=4, allow_unicode=True)

@@ -1,5 +1,6 @@
+# -*- coding: utf-8 -*-
 import atexit
-import json
+import yaml
 import re
 import time
 from random import random
@@ -10,13 +11,13 @@ import requests
 import answer
 
 
-def repeatExam(_config):
-    examsUrl = _config['examsUrl']
+def repeatExam(config):
+    examsUrl = config['examsUrl']
     sess = requests.Session()
-    sess.cookies.update(_config['cookies'])
+    sess.cookies.update(config['cookies'])
     sess.headers.update(answer.headers)
     while True:
-        if config['questionsBankAmount'] != 0 and len(questionsBank['1']) >= config['questionsBankAmount']:
+        if config['questionBanksAmount'] != 0 and len(questionBanks['1']) >= config['questionBanksAmount']:
             print('题库收集完毕')
             break
         detailUrl = answer.getDetailUrl(examsUrl, sess)
@@ -37,26 +38,26 @@ def repeatExam(_config):
             except AttributeError:
                 print(examHtml)
                 return
-            if 'span class="ans"' in questionContent:
+            if '<span class="ans"' in questionContent:
                 # 填空题
-                questionsBank['1'][questionId] = [_answer]
+                questionBanks['1'][questionId] = [_answer]
             else:
                 _answer = _answer.replace('、', '')
                 order = re.findall('data-question-value="([0-9])"', questionContent)
                 #                                #  ord('A') = 65
-                questionsBank['1'][questionId] = [order[ord(i) - 65] for i in _answer]
+                questionBanks['1'][questionId] = [order[ord(i) - 65] for i in _answer]
         time.sleep(5 + random() * 5)  # 睡眠 [5, 10]s
 
 
 def saveConfig():
-    with open('QuestionBanks.json', 'w') as _file:
-        json.dump(questionsBank, _file, indent=4, ensure_ascii=False)
+    with open('QuestionBanks.yaml', 'w', encoding='UTF-8') as _file:
+        yaml.safe_dump(questionBanks, _file, indent=4, allow_unicode=True)
 
 
-with open('./config.json') as file:
-    config = json.load(file)
-with open('QuestionBanks.json') as file:
-    questionsBank = json.load(file)
+with open('config.yaml', 'r', encoding='UTF-8') as file:
+    config = yaml.safe_load(file)
+with open('QuestionBanks.yaml', 'r', encoding='UTF-8') as file:
+    questionBanks = yaml.safe_load(file)
 
 for account in config['accounts']:
     Thread(target=repeatExam, args=(account,)).start()

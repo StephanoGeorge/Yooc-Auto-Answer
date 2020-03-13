@@ -1,0 +1,12 @@
+# 账户列表
+accounts:
+-   cookies:
+        csrftoken: '123'
+        sessionid: 'abc'
+    examsUrl: 'https://www.yooc.me/group/123456/exams'
+-   cookies:
+        csrftoken: '456'
+        sessionid: 'def'
+    examsUrl: 'https://www.yooc.me/group/123456/exams'
+# 题库数量, 指定为 0 可以禁用数量检测
+questionBanksAmount: 300

@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+import yaml
 import json
 import logging
 import os
@@ -49,13 +51,13 @@ def getDetailUrl(examsUrl, sess):
 
 
 def addAnswer(_key):
-    if _key in questionsBank['0']:
-        answers.append({questionId: {'1': questionsBank['0'][_key]}})
+    if _key in questionBanks['0']:
+        answers.append({questionId: {'1': questionBanks['0'][_key]}})
     else:
         # 模糊匹配
-        possibleKey = process.extractOne(_key, questionsBank['0'].keys())
+        possibleKey = process.extractOne(_key, questionBanks['0'].keys())
         print('key: {}\npossibleKey: {}'.format(_key, possibleKey), end='\n\n')
-        answers.append({questionId: {'1': questionsBank['0'][possibleKey[0]]}})
+        answers.append({questionId: {'1': questionBanks['0'][possibleKey[0]]}})
 
 
 def submitAnswer(sess, detailUrl, answers):
@@ -80,8 +82,8 @@ if __name__ == '__main__':
             r = f.read()
             if float(r) != 0 and time.time() - float(r) < 18e6:
                 os._exit(0)
-    with open('QuestionBanks.json') as file:
-        questionsBank = json.load(file)
+    with open('QuestionBanks.yaml', 'r', encoding='UTF-8') as file:
+        questionBanks = yaml.safe_load(file)
 
     cookies = input('键入 cookies, 形如: {"响应 Cookie":{...},"请求 Cookie":{"csrftoken":"123abc",'
                     '"Hm_lpvt_123":"1574858254","sessionid":"123abc"}}:\n')
@@ -94,7 +96,7 @@ if __name__ == '__main__':
     detailUrl = getDetailUrl(examsUrl, sess)
     examHtml = sess.get(detailUrl, headers={'Referer': examsUrl}).text
     ###############################################
-    with open('./log/detail.html', 'w') as f:
+    with open('log/detail.html', 'w', encoding='UTF-8') as f:
         f.write(examHtml)
     startTime = time.time()
     examHtml = examHtml.replace('\n', '')
@@ -105,8 +107,8 @@ if __name__ == '__main__':
         answer = []
         questionId = question[0]
         questionContent = question[1]
-        if questionId in questionsBank['1']:
-            answers.append({questionId: {'1': questionsBank['1'][questionId]}})
+        if questionId in questionBanks['1']:
+            answers.append({questionId: {'1': questionBanks['1'][questionId]}})
             continue
         questionContent = re.sub(r'q-cnt crt">[0-9]+、<span>\[[0-9]+分\]', '', questionContent)
         if '<input type="text">' in questionContent:

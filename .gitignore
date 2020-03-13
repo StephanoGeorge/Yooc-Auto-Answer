@@ -3,6 +3,6 @@
 *.log
 __pycache__
 QuestionBanks
-QuestionBanks.json
+QuestionBanks.yaml
 config.*
 log
