@@ -80,7 +80,7 @@ if __name__ == '__main__':
             r = f.read()
             if float(r) != 0 and time.time() - float(r) < 18e6:
                 os._exit(0)
-    with open('./QuestionsBank.json') as file:
+    with open('QuestionBanks.json') as file:
         questionsBank = json.load(file)
 
     cookies = input('键入 cookies, 形如: {"响应 Cookie":{...},"请求 Cookie":{"csrftoken":"123abc",'

@@ -86,7 +86,7 @@ def onlyKeepChineseWords(string):
 
 questionsBank = {}
 
-with os.scandir('QuestionsBank') as files:
+with os.scandir('QuestionBanks') as files:
     for entry in files:
         with open(entry) as file:
             if file.name.endswith('.html'):
@@ -94,5 +94,5 @@ with os.scandir('QuestionsBank') as files:
             else:
                 questionsBank = {**questionsBank, **parseQuestionsFromTxt(file.read())}
 
-with open('./QuestionsBank.json', 'w') as file:
+with open('QuestionBanks.json', 'w') as file:
     json.dump(questionsBank, file, indent=4, ensure_ascii=False)

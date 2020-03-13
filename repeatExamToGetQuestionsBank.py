@@ -49,13 +49,13 @@ def repeatExam(_config):
 
 
 def saveConfig():
-    with open('./QuestionsBank.json', 'w') as _file:
+    with open('QuestionBanks.json', 'w') as _file:
         json.dump(questionsBank, _file, indent=4, ensure_ascii=False)
 
 
 with open('./config.json') as file:
     config = json.load(file)
-with open('./QuestionsBank.json') as file:
+with open('QuestionBanks.json') as file:
     questionsBank = json.load(file)
 
 for account in config['accounts']:
