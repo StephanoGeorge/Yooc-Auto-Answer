@@ -1,5 +1,4 @@
 # -*- coding: UTF-8 -*-
-import yaml
 import json
 import logging
 import os
@@ -8,6 +7,7 @@ import time
 from random import random
 
 import requests
+import yaml
 from fuzzywuzzy import process
 from simplejson import JSONDecodeError
 
@@ -23,11 +23,11 @@ headers = {'Host': 'www.yooc.me',
            'Cache-Control': 'no-cache'}
 
 
-def getPostHeaders(refererUrl, session_):
+def getPostHeaders(refererUrl, sessionM):
     return {'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
             'Origin': 'https://www.yooc.me',
             'Referer': refererUrl,
-            'X-CSRFToken': session_.cookies.get('csrftoken', domain=''),
+            'X-CSRFToken': sessionM.cookies.get('csrftoken', domain=''),
             'X-Requested-With': 'XMLHttpRequest'}
 
 
@@ -38,9 +38,9 @@ def getDetailUrl(examsUrlN, sessionN):
     if repeatUrl is not None:
         try:
             response = sessionN.post(repeatUrl.group(1),
-                                 headers={**getPostHeaders(examsUrlN, sessionN),
-                                          'Content-Type': 'application/json; charset=utf-8'},
-                                 data={'csrfmiddlewaretoken': sessionN.cookies.get('csrftoken', domain='')})
+                                     headers={**getPostHeaders(examsUrlN, sessionN),
+                                              'Content-Type': 'application/json; charset=utf-8'},
+                                     data={'csrfmiddlewaretoken': sessionN.cookies.get('csrftoken', domain='')})
             return response.json()['url']
         except JSONDecodeError:
             logging.warning(response.text)
