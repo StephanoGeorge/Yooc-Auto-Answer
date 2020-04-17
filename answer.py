@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+# -*- coding: UTF-8 -*-
 import yaml
 import json
 import logging
@@ -23,52 +23,52 @@ headers = {'Host': 'www.yooc.me',
            'Cache-Control': 'no-cache'}
 
 
-def getPostHeaders(refererUrl, sess):
+def getPostHeaders(refererUrl, session_):
     return {'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
             'Origin': 'https://www.yooc.me',
             'Referer': refererUrl,
-            'X-CSRFToken': sess.cookies.get('csrftoken', domain=''),
+            'X-CSRFToken': session_.cookies.get('csrftoken', domain=''),
             'X-Requested-With': 'XMLHttpRequest'}
 
 
-def getDetailUrl(examsUrl, sess):
-    _examHtml = sess.get(examsUrl).text
+def getDetailUrl(examsUrlN, sessionN):
+    _examHtml = sessionN.get(examsUrlN).text
     time.sleep(0 + random() * 1)  # 睡眠 [0, 1]s
     repeatUrl = re.search(r'repeat-url="(.+?)">重做试卷', _examHtml)
     if repeatUrl is not None:
         try:
-            resp = sess.post(repeatUrl.group(1),
-                             headers={**getPostHeaders(examsUrl, sess),
-                                      'Content-Type': 'application/json; charset=utf-8'},
-                             data={'csrfmiddlewaretoken': sess.cookies.get('csrftoken', domain='')})
-            return resp.json()['url']
+            response = sessionN.post(repeatUrl.group(1),
+                                 headers={**getPostHeaders(examsUrlN, sessionN),
+                                          'Content-Type': 'application/json; charset=utf-8'},
+                                 data={'csrfmiddlewaretoken': sessionN.cookies.get('csrftoken', domain='')})
+            return response.json()['url']
         except JSONDecodeError:
-            logging.warning(resp.text)
+            logging.warning(response.text)
     else:
         print(_examHtml)
         return re.search(r'href="(.+?)" id="start-exam" class="start-exam" target="_blank">'
                          r'开始考试', _examHtml).group(1)
 
 
-def addAnswer(_key):
-    if _key in questionBanks['0']:
-        answers.append({questionId: {'1': questionBanks['0'][_key]}})
+def addAnswer(keyN):
+    if keyN in questionBanks['parsed']:
+        answers.append({questionId: {'1': questionBanks['parsed'][keyN]}})
     else:
         # 模糊匹配
-        possibleKey = process.extractOne(_key, questionBanks['0'].keys())
-        print('key: {}\npossibleKey: {}'.format(_key, possibleKey), end='\n\n')
-        answers.append({questionId: {'1': questionBanks['0'][possibleKey[0]]}})
+        possibleKey = process.extractOne(keyN, questionBanks['parsed'].keys())
+        print('key: {}\npossibleKey: {}'.format(keyN, possibleKey), end='\n\n')
+        answers.append({questionId: {'1': questionBanks['parsed'][possibleKey[0]]}})
 
 
-def submitAnswer(sess, detailUrl, answers):
-    return sess.post(detailUrl.replace('detail', 'answer/submit'),
-                     headers=getPostHeaders(detailUrl, sess),
-                     data={
-                         'csrfmiddlewaretoken': sess.cookies.get('csrftoken', domain=''),
-                         'answers': json.dumps(answers),
-                         'type': '0',
-                         'auto': '0'
-                     })
+def submitAnswer(sessionN, detailUrlN, answersN):
+    return sessionN.post(detailUrlN.replace('detail', 'answer/submit'),
+                         headers=getPostHeaders(detailUrlN, sessionN),
+                         data={
+                             'csrfmiddlewaretoken': sessionN.cookies.get('csrftoken', domain=''),
+                             'answers': json.dumps(answersN),
+                             'type': '0',
+                             'auto': '0'
+                         })
 
 
 if __name__ == '__main__':
@@ -76,27 +76,27 @@ if __name__ == '__main__':
     print('\u4e3a\u9632\u6b62\u5546\u7528,'
           '\u4f7f\u7528\u95f4\u9694\u5fc5\u987b'
           '\u5927\u4e8e\u4e94\u5c0f\u65f6')
-    sess = requests.Session()
+    session = requests.Session()
     if os.path.exists(fileName):
         with open(fileName) as f:
             r = f.read()
             if float(r) != 0 and time.time() - float(r) < 18e6:
-                os._exit(0)
-    with open('QuestionBanks.yaml', 'r', encoding='UTF-8') as file:
+                quit()
+    with open('Question-Banks.yaml', 'r', encoding='UTF-8') as file:
         questionBanks = yaml.safe_load(file)
 
     cookies = input('键入 cookies, 形如: {"响应 Cookie":{...},"请求 Cookie":{"csrftoken":"123abc",'
                     '"Hm_lpvt_123":"1574858254","sessionid":"123abc"}}:\n')
     cookies = json.loads(re.search(r'"请求 Cookie":(.+?)\}$', cookies).group(1))
-    sess.cookies.update(cookies)
+    session.cookies.update(cookies)
 
     examsUrl = input('键入知识竞赛页面 URL, 形如: https://www.yooc.me/group/123456/exams:\n')
 
-    sess.headers.update(headers)
-    detailUrl = getDetailUrl(examsUrl, sess)
-    examHtml = sess.get(detailUrl, headers={'Referer': examsUrl}).text
+    session.headers.update(headers)
+    detailUrl = getDetailUrl(examsUrl, session)
+    examHtml = session.get(detailUrl, headers={'Referer': examsUrl}).text
     ###############################################
-    with open('log/detail.html', 'w', encoding='UTF-8') as f:
+    with open('log/detail-{}.html'.format(time.time()), 'w', encoding='UTF-8') as f:
         f.write(examHtml)
     startTime = time.time()
     examHtml = examHtml.replace('\n', '')
@@ -107,8 +107,8 @@ if __name__ == '__main__':
         answer = []
         questionId = question[0]
         questionContent = question[1]
-        if questionId in questionBanks['1']:
-            answers.append({questionId: {'1': questionBanks['1'][questionId]}})
+        if questionId in questionBanks['collected']:
+            answers.append({questionId: {'1': questionBanks['collected'][questionId]}})
             continue
         questionContent = re.sub(r'q-cnt crt">[0-9]+、<span>\[[0-9]+分\]', '', questionContent)
         if '<input type="text">' in questionContent:
@@ -137,7 +137,7 @@ if __name__ == '__main__':
 
     print('睡眠...\n')
     finishTime = time.time()
-    time.sleep(20 + random() * 5 - (finishTime - startTime) / 1000)  # 睡眠 [20, 25]s
-    print(submitAnswer(sess, detailUrl, answers).json()['message'])
+    time.sleep(45 + random() * 20 - (finishTime - startTime) / 1000)
+    print(submitAnswer(session, detailUrl, answers).json()['message'])
     with open(fileName, 'w') as f:
         f.write(str(time.time()))

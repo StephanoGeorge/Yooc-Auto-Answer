@@ -6,31 +6,15 @@
 
 ## 整理现成的题库(可选)
 
-将题库转换为 `txt` 格式置于 `QuestionBanks` 文件夹中
+可以接受的题库格式见下文说明
 
-> 可以接受的题库格式包括:
->
-> ```
-> 23、问题(ABC)
-> A、选项
-> B、选项
-> ...
-> ```
-> ```
-> 23、问题
-> A、选项
-> B、选项
-> ...
-> 答案: ABC
-> ```
-> 
-> 对于填空题, 因为 `txt` 格式不能展示, 所以要使用工具将 `docx`,`pdf` 格式转换为 `html`, 再整理, 如果整理失败, 需要修改代码以匹配当前的 `html`
+将题库转换为 `txt` 格式置于 `Question-Banks` 文件夹中
 
-运行 `parseQuestionBanksToJson.py` 可以整理 `txt`,`html` 格式题库到 `QuestionBanks.yaml` 中
+运行 `parse_question_banks_to_yaml.py` 可以整理 `txt`,`html` 格式题库到 `Question-Banks.yaml` 中
 
 ## 重复测试以增加题库(可选)
 
-将 `configTemplate.yaml` 文件更名为 `config.yaml`, 并配置, 运行 `getQuestionBanksByRepeatingExam.py` 可以重复测试以向 `QuestionBanks.yaml` 中增加题库
+将 `config_template.py` 文件更名为 `config.py`, 并配置, 运行 `get_question_banks_by_repeating_exam.py` 可以重复测试以向 `Question-Banks.yaml` 中增加题库
 
 ## 自动答题
 
@@ -39,6 +23,22 @@
 # 说明
 
 - 需要题库或者考试可以反复测试
+- 可以接受的题库格式包括:
+  ```
+  23、问题(ABC)
+  A、选项
+  B、选项
+  ...
+  ```
+  ```
+  23、问题
+  A、选项
+  B、选项
+  ...
+  答案: ABC
+  ```
+  对于填空题, 因为 `txt` 格式不能展示, 所以要使用工具将 `docx`,`pdf` 格式转换为 `html`, 再整理, 如果整理失败, 需要修改代码以匹配当前的 `html`
+
 
 # 免责声明
 

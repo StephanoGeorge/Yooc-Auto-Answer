@@ -2,7 +2,7 @@
 .vscode
 *.log
 __pycache__
-QuestionBanks
-QuestionBanks.yaml
-config.*
+Question-Banks
+Question-Banks.yaml
+config.py
 log

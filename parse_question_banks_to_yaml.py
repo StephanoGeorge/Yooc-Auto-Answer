@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+# -*- coding: UTF-8 -*-
 import yaml
 import os
 import re
@@ -87,7 +87,7 @@ def onlyKeepChineseWords(string):
 
 questionBanks = {}
 
-with os.scandir('QuestionBanks') as files:
+with os.scandir('Question-Banks') as files:
     for entry in files:
         with open(entry, 'r', encoding='UTF-8') as file:
             if file.name.endswith('.html'):
@@ -95,5 +95,5 @@ with os.scandir('QuestionBanks') as files:
             else:
                 questionBanks = {**questionBanks, **parseQuestionsFromTxt(file.read())}
 
-with open('QuestionBanks.yaml', 'w', encoding='UTF-8') as file:
+with open('Question-Banks.yaml', 'w', encoding='UTF-8') as file:
     yaml.safe_dump(questionBanks, file, indent=4, allow_unicode=True)
