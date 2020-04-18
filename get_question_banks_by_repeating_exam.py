@@ -1,12 +1,13 @@
 # -*- coding: UTF-8 -*-
 import atexit
-import yaml
 import re
 import time
+from pathlib import Path
 from random import random
 from threading import Thread
 
 import requests
+import yaml
 
 import answer
 import config
@@ -35,30 +36,33 @@ def repeatExam(configN):
             questionId = question[0]
             questionContent = question[1]
             try:
-                answerN = re.search(r'<p>正确答案：(.+?)</p>', questionContent).group(1)
+                answerI = re.search(r'<p>正确答案：(.+?)</p>', questionContent).group(1)
             except AttributeError:
                 print(examHtml)
                 return
             if '<span class="ans"' in questionContent:
                 # 填空题
-                questionBanks['collected'][questionId] = [answerN]
+                questionBanks['collected'][questionId] = [answerI]
             else:
-                answerN = answerN.replace('、', '')
+                answerI = answerI.replace('、', '')
                 order = re.findall('data-question-value="([0-9])"', questionContent)
                 #                                #  ord('A') = 65
-                questionBanks['collected'][questionId] = [order[ord(i) - 65] for i in answerN]
+                questionBanks['collected'][questionId] = [order[ord(i) - 65] for i in answerI]
         time.sleep(5 + random() * 5)  # 睡眠 [5, 10]s
 
 
-def saveConfig():
-    with open('Question-Banks.yaml', 'w', encoding='UTF-8') as fileN:
-        yaml.safe_dump(questionBanks, fileN, indent=4, allow_unicode=True)
-
-
-with open('Question-Banks.yaml', 'r', encoding='UTF-8') as file:
+path = Path('Question-Banks.yaml')
+with path.open('r', encoding='UTF-8') as file:
     questionBanks = yaml.safe_load(file)
-
+if questionBanks is None:
+    questionBanks = {'parsed': {}}
 for account in config.accounts:
     Thread(target=repeatExam, args=(account,)).start()
+
+
+def saveConfig():
+    with path.open('w', encoding='UTF-8') as fileI:
+        yaml.safe_dump(questionBanks, fileI, indent=4, allow_unicode=True)
+
 
 atexit.register(saveConfig)
