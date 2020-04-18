@@ -31,41 +31,41 @@ def getPostHeaders(refererUrl, sessionM):
             'X-Requested-With': 'XMLHttpRequest'}
 
 
-def getDetailUrl(examsUrlN, sessionN):
-    _examHtml = sessionN.get(examsUrlN).text
+def getDetailUrl(examsUrlI, sessionI):
+    examHtmlI = sessionI.get(examsUrlI).text
     time.sleep(0 + random() * 1)  # 睡眠 [0, 1]s
-    repeatUrl = re.search(r'repeat-url="(.+?)">重做试卷', _examHtml)
+    repeatUrl = re.search(r'repeat-url="(.+?)">重做试卷', examHtmlI)
     if repeatUrl is not None:
         try:
-            response = sessionN.post(repeatUrl.group(1),
-                                     headers={**getPostHeaders(examsUrlN, sessionN),
+            response = sessionI.post(repeatUrl.group(1),
+                                     headers={**getPostHeaders(examsUrlI, sessionI),
                                               'Content-Type': 'application/json; charset=utf-8'},
-                                     data={'csrfmiddlewaretoken': sessionN.cookies.get('csrftoken', domain='')})
+                                     data={'csrfmiddlewaretoken': sessionI.cookies.get('csrftoken', domain='')})
             return response.json()['url']
         except JSONDecodeError:
             logging.warning(response.text)
     else:
-        print(_examHtml)
+        print(examHtmlI)
         return re.search(r'href="(.+?)" id="start-exam" class="start-exam" target="_blank">'
-                         r'开始考试', _examHtml).group(1)
+                         r'开始考试', examHtmlI).group(1)
 
 
-def addAnswer(keyN):
-    if keyN in questionBanks['parsed']:
-        answers.append({questionId: {'1': questionBanks['parsed'][keyN]}})
+def addAnswer(keyI):
+    if keyI in questionBanks['parsed']:
+        answers.append({questionId: {'1': questionBanks['parsed'][keyI]}})
     else:
         # 模糊匹配
-        possibleKey = process.extractOne(keyN, questionBanks['parsed'].keys())
-        print('key: {}\npossibleKey: {}'.format(keyN, possibleKey), end='\n\n')
+        possibleKey = process.extractOne(keyI, questionBanks['parsed'].keys())
+        print('key: {}\npossibleKey: {}'.format(keyI, possibleKey), end='\n\n')
         answers.append({questionId: {'1': questionBanks['parsed'][possibleKey[0]]}})
 
 
-def submitAnswer(sessionN, detailUrlN, answersN):
-    return sessionN.post(detailUrlN.replace('detail', 'answer/submit'),
-                         headers=getPostHeaders(detailUrlN, sessionN),
+def submitAnswer(sessionI, detailUrlI, answersI):
+    return sessionI.post(detailUrlI.replace('detail', 'answer/submit'),
+                         headers=getPostHeaders(detailUrlI, sessionI),
                          data={
-                             'csrfmiddlewaretoken': sessionN.cookies.get('csrftoken', domain=''),
-                             'answers': json.dumps(answersN),
+                             'csrfmiddlewaretoken': sessionI.cookies.get('csrftoken', domain=''),
+                             'answers': json.dumps(answersI),
                              'type': '0',
                              'auto': '0'
                          })
@@ -90,12 +90,11 @@ if __name__ == '__main__':
     cookies = json.loads(re.search(r'"请求 Cookie":(.+?)\}$', cookies).group(1))
     session.cookies.update(cookies)
 
-    examsUrl = input('键入知识竞赛页面 URL, 形如: https://www.yooc.me/group/123456/exams:\n')
+    examsUrl = input('键入在线测试页面 URL, 形如: https://www.yooc.me/group/123456/exams:\n')
 
     session.headers.update(headers)
     detailUrl = getDetailUrl(examsUrl, session)
     examHtml = session.get(detailUrl, headers={'Referer': examsUrl}).text
-    ###############################################
     with open('log/detail-{}.html'.format(time.time()), 'w', encoding='UTF-8') as f:
         f.write(examHtml)
     startTime = time.time()
@@ -117,12 +116,12 @@ if __name__ == '__main__':
             questionContent = re.sub(r'[^\u4e00-\u9fa5、.a-zA-Z0-9]', '', questionContent)
             addAnswer(questionContent)
         else:
-            problem = re.search('q-cnt crt">(.+?)</p>', questionContent).group(1)
-            problem = re.sub(r'<.+?>', '', problem, flags=re.S)
-            problem = re.sub(r'[^\u4e00-\u9fa5、.a-zA-Z0-9]', '', problem)
+            questionI = re.search('q-cnt crt">(.+?)</p>', questionContent).group(1)
+            questionI = re.sub(r'<.+?>', '', questionI, flags=re.S)
+            questionI = re.sub(r'[^\u4e00-\u9fa5、.a-zA-Z0-9]', '', questionI)
             if '<ol class="true-or-false">' in questionContent:
                 # 判断题
-                addAnswer(problem)
+                addAnswer(questionI)
             else:
                 # 选择题
                 options = []
@@ -132,12 +131,14 @@ if __name__ == '__main__':
                     option = re.sub('^[ABCDEFG][、.]', '', option)
                     options.append(option)
                 options.sort()
-                key = '_'.join((problem, *options))
+                key = '_'.join((questionI, *options))
                 addAnswer(key)
 
-    print('睡眠...\n')
-    finishTime = time.time()
-    time.sleep(45 + random() * 20 - (finishTime - startTime) / 1000)
+    while True:
+        try:
+            print('\r已经开考 {} s, 键入 Ctrl + C 以提交'.format(round(time.time() - startTime)), end='', flush=True)
+        except KeyboardInterrupt:
+            break
     print(submitAnswer(session, detailUrl, answers).json()['message'])
     with open(fileName, 'w') as f:
         f.write(str(time.time()))
