@@ -45,7 +45,6 @@ def getDetailUrl(examsUrlI, sessionI):
         except JSONDecodeError:
             logging.warning(response.text)
     else:
-        print(examHtmlI)
         return re.search(r'href="(.+?)" id="start-exam" class="start-exam" target="_blank">'
                          r'开始考试', examHtmlI).group(1)
 
@@ -87,8 +86,7 @@ if __name__ == '__main__':
 
     cookies = input('键入 cookies, 形如: {"响应 Cookie":{...},"请求 Cookie":{"csrftoken":"123abc",'
                     '"Hm_lpvt_123":"1574858254","sessionid":"123abc"}}:\n')
-    cookies = json.loads(re.search(r'"请求 Cookie":(.+?)\}$', cookies).group(1))
-    session.cookies.update(cookies)
+    session.cookies.update(json.loads(cookies))
 
     examsUrl = input('键入在线测试页面 URL, 形如: https://www.yooc.me/group/123456/exams:\n')
 
