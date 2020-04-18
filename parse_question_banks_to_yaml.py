@@ -46,8 +46,6 @@ def parseQuestionsFromTxt(questionBanksI):
                 if searchOption is not None:
                     if searchOption.group(1) != ' ':
                         answers.append(str(option))  # 0, 1, 2
-        if len(options) == 2:
-            options = []
         for index, option in enumerate(options):
             options[index] = re.sub(r'^`.`', '', option)
         if answers == '对':
@@ -80,7 +78,7 @@ def parseQuestionsFromHtml(questions):
         question = re.sub(r'<span[\n\s]+class="cls_00[57]">.+?</span>', '', question)
         question = re.sub(r'<.+?>', '', question, flags=re.S)
         # 只保留汉字,数字,字母等字符, 适用于填空题
-        question = re.sub(r'[^\u4e00-\u9fa5、.a-zA-Z0-9]', '', question)
+        question = re.sub(r'[^\u4e00-\u9fa5.a-zA-Z0-9]', '', question)
         questions[question] = answers
     return questions
 

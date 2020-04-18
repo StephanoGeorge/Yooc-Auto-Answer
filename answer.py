@@ -72,6 +72,10 @@ def submitAnswer(sessionI, detailUrlI, answersI):
                          })
 
 
+def onlyKeepChineseChars(string):
+    return re.sub(r'[^\u4e00-\u9fa5.a-zA-Z0-9]', '', string)
+
+
 if __name__ == '__main__':
     fileI = Path.home() / '.config' / '.yoocAutoAnswer'
     print('\u4e3a\u9632\u6b62\u5546\u7528,'
@@ -113,26 +117,22 @@ if __name__ == '__main__':
         if '<input type="text">' in questionContent:
             # 填空题
             questionContent = re.sub(r'<.+?>', '', questionContent, flags=re.S)
-            questionContent = re.sub(r'[^\u4e00-\u9fa5、.a-zA-Z0-9]', '', questionContent)
+            questionContent = onlyKeepChineseChars(questionContent)
             addAnswer(questionContent)
         else:
+            # 选择题/判断题
             questionI = re.search('q-cnt crt">(.+?)</p>', questionContent).group(1)
             questionI = re.sub(r'<.+?>', '', questionI, flags=re.S)
-            questionI = re.sub(r'[^\u4e00-\u9fa5、.a-zA-Z0-9]', '', questionI)
-            if '<ol class="true-or-false">' in questionContent:
-                # 判断题
-                addAnswer(questionI)
-            else:
-                # 选择题
-                options = []
-                for option in re.findall('<li>(.+?)</li>', questionContent):
-                    option = re.sub(r'<.+?>', '', option, flags=re.S)
-                    option = re.sub(r'[^\u4e00-\u9fa5、.a-zA-Z0-9]', '', option)
-                    option = re.sub('^[ABCDEFG][、.]', '', option)
-                    options.append(option)
-                options.sort()
-                key = '_'.join((questionI, *options))
-                addAnswer(key)
+            questionI = onlyKeepChineseChars(questionI)
+            options = []
+            for option in re.findall('<li>(.+?)</li>', questionContent):
+                option = re.sub(r'<.+?>', '', option, flags=re.S)
+                option = onlyKeepChineseChars(option)
+                option = re.sub('^[ABCDEFG][、.]', '', option)
+                options.append(option)
+            options.sort()
+            key = '_'.join((questionI, *options))
+            addAnswer(key)
 
     while True:
         try:
