@@ -1,9 +1,8 @@
 # -*- coding: UTF-8 -*-
 import json
-import logging
-import os
 import re
 import time
+from pathlib import Path
 from random import random
 
 import requests
@@ -43,8 +42,11 @@ def getDetailUrl(examsUrlI, sessionI):
                                      data={'csrfmiddlewaretoken': sessionI.cookies.get('csrftoken', domain='')})
             return response.json()['url']
         except JSONDecodeError:
-            logging.warning(response.text)
+            with Path('log', 'exams-JSONDecodeError-{}.html'.format(time.time()), 'w', encoding='UTF-8').open() as fi:
+                fi.write(response.text)
     else:
+        with Path('log', 'exams-{}.html'.format(time.time())).open('w', encoding='UTF-8') as fi:
+            fi.write(examHtmlI)
         return re.search(r'href="(.+?)" id="start-exam" class="start-exam" target="_blank">'
                          r'开始考试', examHtmlI).group(1)
 
@@ -71,15 +73,15 @@ def submitAnswer(sessionI, detailUrlI, answersI):
 
 
 if __name__ == '__main__':
-    fileName = os.path.expanduser('~/.config/.yoocAutoAnswer')
+    fileI = Path.home() / '.config' / '.yoocAutoAnswer'
     print('\u4e3a\u9632\u6b62\u5546\u7528,'
           '\u4f7f\u7528\u95f4\u9694\u5fc5\u987b'
           '\u5927\u4e8e\u4e94\u5c0f\u65f6')
     session = requests.Session()
-    if os.path.exists(fileName):
-        with open(fileName) as f:
-            r = f.read()
-            if float(r) != 0 and time.time() - float(r) < 18e6:
+    if fileI.exists():
+        with fileI.open() as f:
+            r = float(f.read())
+            if r != 0 and time.time() - r < 18e3:
                 quit()
     with open('Question-Banks.yaml', 'r', encoding='UTF-8') as file:
         questionBanks = yaml.safe_load(file)
@@ -93,7 +95,7 @@ if __name__ == '__main__':
     session.headers.update(headers)
     detailUrl = getDetailUrl(examsUrl, session)
     examHtml = session.get(detailUrl, headers={'Referer': examsUrl}).text
-    with open('log/detail-{}.html'.format(time.time()), 'w', encoding='UTF-8') as f:
+    with Path('log', 'detail-{}.html'.format(time.time())).open('w', encoding='UTF-8') as f:
         f.write(examHtml)
     startTime = time.time()
     examHtml = examHtml.replace('\n', '')
@@ -135,8 +137,11 @@ if __name__ == '__main__':
     while True:
         try:
             print('\r已经开考 {} s, 键入 Ctrl + C 以提交'.format(round(time.time() - startTime)), end='', flush=True)
+            time.sleep(1)
         except KeyboardInterrupt:
+            print()
             break
     print(submitAnswer(session, detailUrl, answers).json()['message'])
-    with open(fileName, 'w') as f:
-        f.write(str(time.time()))
+    if r != 0:
+        with fileI.open('w') as f:
+            f.write(str(time.time()))
