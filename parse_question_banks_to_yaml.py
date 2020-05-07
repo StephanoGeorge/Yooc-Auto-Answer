@@ -16,8 +16,7 @@ def parseQuestionsFromTxt(questionBanksI):
     questionBanksI = re.sub(r'(参考)?答案?(?P<answer>[ABCDEFG对错]+)$', r'`!\g<answer>`!', questionBanksI, flags=re.M)
     questionBanksI = re.sub(r'\((?P<answer>[ABCDEFG对错]+)\)$', r'`!\g<answer>`!', questionBanksI, flags=re.M)
     questionBanksI = re.sub(r'[\[\]()\t、]', '', questionBanksI)
-    questionBanksI = questionBanksI.replace('\n{3,}', '\n\n')
-    questionBanksI = re.sub(r'\n+$', '', questionBanksI)
+    questionBanksI = re.sub('\n{3,}', '\n\n', questionBanksI)
     questionsBanksDict = {}
 
     for questionBank in questionBanksI.split('\n\n'):
