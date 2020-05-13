@@ -32,7 +32,7 @@ def parseQuestionsFromTxt(questionBanksI):
         lines = questionBank.split('\n')
         searchAnswerInFirst = re.findall(r'`!(.+?)`!', lines[0])
         searchAnswerInLast = re.search(r'`!(.+?)`!', lines[-1])
-        if searchAnswerInFirst is not None:
+        if len(searchAnswerInFirst) != 0:
             question = re.sub(r'`!.+?`!', '', lines[0])
             answers = []
             for answer in searchAnswerInFirst:
