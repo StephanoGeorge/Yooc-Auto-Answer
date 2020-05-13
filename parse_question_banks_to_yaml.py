@@ -8,50 +8,71 @@ import yaml
 def parseQuestionsFromTxt(questionBanksI):
     questionBanksI = questionBanksI.replace('（', '(')
     questionBanksI = questionBanksI.replace('）', ')')
-    questionBanksI = re.sub(r'((?<!^[(\[]) )|( (?![)\]]))', '', questionBanksI, flags=re.M)
-    questionBanksI = re.sub(r'^\t+', '', questionBanksI, flags=re.M)
-    questionBanksI = re.sub(r'[^\u4e00-\u9fa5、. ()\[\]a-zA-Z0-9\t\n]', '', questionBanksI)
-    questionBanksI = re.sub(r'(?<=[^\n]\n)([ABCDEFG])[\t、.]+', r'\n`\1`', questionBanksI, flags=re.M)
+    questionBanksI = re.sub(r'((?<=[^(\[]) )|( (?=[^)\]]))', '', questionBanksI)
+    questionBanksI = re.sub(r'(?<![^\n]\n)\( \)', '', questionBanksI)
+    questionBanksI = re.sub(r'((?<=[^0-9])\.)|(\.(?=[^0-9]))', '', questionBanksI, flags=re.M)
+    questionBanksI = re.sub(r'[^\u4e00-\u9fa5. ()\[\]a-zA-Z0-9\n]', '', questionBanksI)
+    questionBanksI = re.sub(r'(?<=[^\n]\n)([ABCDEFG])', r'`\1`', questionBanksI, flags=re.M)
+    questionBanksI = re.sub(r'(?<=\n\n)[0-9]+\.?', '', questionBanksI)
+    questionBanksI = re.sub(r'^[0-9]+\.?', '', questionBanksI)
     questionBanksI = re.sub(r'(?<=[^\n]\n)[(\[]([Xx ])[)\]]', r'`\1`', questionBanksI, flags=re.M)
     questionBanksI = re.sub(r'(参考)?答案?(?P<answer>[ABCDEFG对错]+)$', r'`!\g<answer>`!', questionBanksI, flags=re.M)
-    questionBanksI = re.sub(r'\((?P<answer>[ABCDEFG对错]+)\)$', r'`!\g<answer>`!', questionBanksI, flags=re.M)
-    questionBanksI = re.sub(r'[\[\]()\t、]', '', questionBanksI)
+    questionBanksI = re.sub(r'(参考)?答案?(?P<answer>[对错])$', r'`!\g<answer>`!', questionBanksI, flags=re.M)
+    questionBanksI = re.sub(r'\((?P<answer>[ABCDEFG]+)\)', r'`!\g<answer>`!', questionBanksI, flags=re.M)
+    questionBanksI = re.sub(r'[\[\]()]', '', questionBanksI)
     questionBanksI = re.sub('\n{3,}', '\n\n', questionBanksI)
+    questionBanksI = re.sub('\n+$', '', questionBanksI)
     questionsBanksDict = {}
 
-    for questionBank in questionBanksI.split('\n\n'):
+    questionBanksII = questionBanksI.split('\n\n')
+    for questionBank in questionBanksII:
         question = None  # 题目
         options = None  # 选项
         answers = None  # 答案
         lines = questionBank.split('\n')
-        searchQuestion = re.search(r'(.+)`!(.+)`!', lines[0])
-        searchAnswer = re.search(r'`!(.+)`!', lines[-1])
-        if searchQuestion is not None:
-            question = searchQuestion.group(1)
-            answers = searchQuestion.group(2)
+        searchAnswerInFirst = re.findall(r'`!(.+?)`!', lines[0])
+        searchAnswerInLast = re.search(r'`!(.+?)`!', lines[-1])
+        if searchAnswerInFirst is not None:
+            question = re.sub(r'`!.+?`!', '', lines[0])
+            answers = []
+            for answer in searchAnswerInFirst:
+                for char in answer:
+                    answers.append(char)
         else:
             question = lines[0]
-            if searchAnswer is not None:
-                answers = searchAnswer.group(1)
-        if searchAnswer is not None:
+            if searchAnswerInLast is not None:
+                answers = searchAnswerInLast.group(1)
+        if searchAnswerInLast is not None:
             options = lines[1:-1]
         else:
             options = lines[1:]
+        nextQuestionBank = False
+        # 纠正错误分割的题目
+        for index, option in enumerate(options):
+            searchIndex = re.search(r'^`(ABCDEFG)`', option)
+            if searchIndex is not None and ord(option[0]) + 17 != index + 48:
+                questionBanksII.append(questionBank.replace('\n{}'.format(option), option))
+                nextQuestionBank = True
+                break
+        if nextQuestionBank:
+            continue
         if answers is None:
             answers = []
-            for option, line in enumerate(options):
-                searchOption = re.search(r'^`(.)`', line)
-                if searchOption is not None:
-                    if searchOption.group(1) != ' ':
-                        answers.append(str(option))  # 0, 1, 2
-        for index, option in enumerate(options):
-            options[index] = re.sub(r'^`.`', '', option)
+            for indexI, optionI in enumerate(options):
+                searchIndexI = re.search(r'^`(.)`', optionI)
+                if searchIndexI is not None:
+                    if searchIndexI.group(1) != ' ':
+                        answers.append(str(indexI))  # 0, 1, 2
+        if len(answers) == 0:
+            answers.append('2')
+        for indexII, optionII in enumerate(options):
+            options[indexII] = re.sub(r'^`.`', '', optionII)
         if answers == '对':
             answers = ['0']
         elif answers == '错':
             answers = ['1']
         elif re.search(r'[0-9]', answers[0]) is None:
-            # ord('A') - ord('0') = 17
+            # ord('0') - ord('A') = 17
             answers = [chr(ord(i) - 17) for i in answers]
         options.sort()  # 保证统一
         # {'题目_选项': ['0', '1', '2']}
