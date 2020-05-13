@@ -118,5 +118,6 @@ with path.open('r+', encoding='UTF-8') as file:
     else:
         questionBanksO = json.loads(content)
     questionBanksO['parsed'] = questionBanks
+    file.seek(0)
     file.truncate(0)
     json.dump(questionBanksO, file, indent=4, ensure_ascii=False)
