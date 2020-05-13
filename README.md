@@ -10,11 +10,11 @@
 
 将题库转换为 `txt` 格式, 去除文档标题等(...题库/...单选题)内容, 置于 `Question-Banks` 文件夹中
 
-运行 `parse_question_banks_to_yaml.py` 可以整理 `txt`,`html` 格式题库到 `Question-Banks.yaml` 中
+运行 `parse_question_banks_to_json.py` 可以整理 `txt`,`html` 格式题库到 `Question-Banks.json` 中
 
 ## 重复测试以增加题库(可选)
 
-将 `config_template.py` 文件更名为 `config.py`, 并配置, 运行 `get_question_banks_by_repeating_exam.py` 可以重复测试以向 `Question-Banks.yaml` 中增加题库
+将 `config_template.py` 文件更名为 `config.py`, 并配置, 运行 `get_question_banks_by_repeating_exam.py` 可以重复测试以向 `Question-Banks.json` 中增加题库
 
 ## 自动答题
 

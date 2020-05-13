@@ -2,7 +2,7 @@
 import re
 from pathlib import Path
 
-import yaml
+import json
 
 
 def parseQuestionsFromTxt(questionBanksI):
@@ -109,13 +109,14 @@ for file in Path('Question-Banks').iterdir():
             questionBanks = {**questionBanks, **parseQuestionsFromHtml(stream.read())}
         else:
             questionBanks = {**questionBanks, **parseQuestionsFromTxt(stream.read())}
-path = Path('Question-Banks.yaml')
-if not path.exists():
-    path.touch()
+path = Path('Question-Banks.json')
+path.touch()
 with path.open('r+', encoding='UTF-8') as file:
-    questionBanksO = yaml.safe_load(file)
-    if questionBanksO is None:
+    content = file.read()
+    if content == '':
         questionBanksO = {'collected': {}}
+    else:
+        questionBanksO = json.loads(content)
     questionBanksO['parsed'] = questionBanks
     file.seek(0)
-    yaml.safe_dump(questionBanksO, file, indent=4, allow_unicode=True)
+    json.dump(questionBanksO, file, indent=4, ensure_ascii=False)
