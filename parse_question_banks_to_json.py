@@ -19,8 +19,8 @@ def parseQuestionsFromTxt(questionBanksI):
     questionBanksI = re.sub(r'(?<=\n\n)[0-9]+\.?', '', questionBanksI)
     questionBanksI = re.sub(r'^[0-9]+\.?', '', questionBanksI)
     questionBanksI = re.sub(r'(?<=[^\n]\n)[(\[]([Xx ])[)\]]', r'`\1`', questionBanksI, flags=re.M)
-    questionBanksI = re.sub(r'(参考)?答案?(?P<answer>[ABCDEFG]+)$', r'`!\g<answer>`!', questionBanksI, flags=re.M)
-    questionBanksI = re.sub(r'(参考)?答案?(?P<answer>[对错])$', r'`!\g<answer>`!', questionBanksI, flags=re.M)
+    questionBanksI = re.sub(r'(参考)?(答案)?(?P<answer>[ABCDEFG]+)$', r'`!\g<answer>`!', questionBanksI, flags=re.M)
+    questionBanksI = re.sub(r'(参考)?(答案)?(?P<answer>[对错])$', r'`!\g<answer>`!', questionBanksI, flags=re.M)
     questionBanksI = re.sub(r'\((?P<answer>[ABCDEFG对错]+)\)', r'`!\g<answer>`!', questionBanksI, flags=re.M)
     questionBanksI = re.sub(r'[\[\]]', '', questionBanksI)
     questionsBanksDict = {}
@@ -62,9 +62,9 @@ def parseQuestionsFromTxt(questionBanksI):
                         answers.append(char)
             else:
                 question = lines[0]
-                if searchAnswerInLast is not None:
+                if len(searchAnswerInLast) != 0:
                     answers = searchAnswerInLast
-            if searchAnswerInLast is not None:
+            if len(searchAnswerInLast) != 0:
                 options = lines[1:-1]
             else:
                 options = lines[1:]
@@ -89,10 +89,9 @@ def parseQuestionsFromTxt(questionBanksI):
                                 answers.append(str(indexI))  # 0, 1, 2
             for indexII, optionII in enumerate(options):
                 options[indexII] = re.sub(r'^`.`', '', optionII)
-        if answers[0] == '对':
-            answers[0] = '0'
-        elif answers[0] == '错':
-            answers[0] = '1'
+        if answers[0] in '对错':
+            options = ['对', '错']
+            answers[0] = '0' if answers[0] == '对' else '1'
         elif re.search(r'[0-9]', answers[0]) is None:
             # ord('0') - ord('A') = 17
             answers = [chr(ord(i) - 17) for i in answers]
