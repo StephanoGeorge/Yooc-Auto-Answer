@@ -116,7 +116,7 @@ if __name__ == '__main__':
         questionContent = re.sub(r'q-cnt crt">[0-9]+、<span>\[[0-9]+分\]', '', questionContent)
         if '<input type="text">' in questionContent:
             # 填空题
-            questionContent = re.sub(r'<.+?>', '', questionContent, flags=re.S)
+            questionContent = re.sub(r'<.+?>', '_', questionContent, flags=re.S)
             questionContent = onlyKeepChineseChars(questionContent)
             addAnswer(questionContent)
         else:
