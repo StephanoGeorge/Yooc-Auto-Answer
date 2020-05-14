@@ -7,7 +7,7 @@ from random import random
 from threading import Thread
 
 import requests
-import yaml
+import json
 
 import answer
 import config
@@ -51,9 +51,9 @@ def repeatExam(configN):
         time.sleep(5 + random() * 5)  # 睡眠 [5, 10]s
 
 
-path = Path('Question-Banks.yaml')
+path = Path('Question-Banks.json')
 with path.open('r', encoding='UTF-8') as file:
-    questionBanks = yaml.safe_load(file)
+    questionBanks = json.load(file)
 if questionBanks is None:
     questionBanks = {'parsed': {}}
 for account in config.accounts:
@@ -62,7 +62,7 @@ for account in config.accounts:
 
 def saveConfig():
     with path.open('w', encoding='UTF-8') as fileI:
-        yaml.safe_dump(questionBanks, fileI, indent=4, allow_unicode=True)
+        json.dump(questionBanks, fileI, indent=4, ensure_ascii=False)
 
 
 atexit.register(saveConfig)

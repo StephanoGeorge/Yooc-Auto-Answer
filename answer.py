@@ -6,7 +6,6 @@ from pathlib import Path
 from random import random
 
 import requests
-import yaml
 from fuzzywuzzy import process
 from simplejson import JSONDecodeError
 
@@ -87,8 +86,8 @@ if __name__ == '__main__':
             r = float(f.read())
             if r != 0 and time.time() - r < 18e3:
                 quit()
-    with open('Question-Banks.yaml', 'r', encoding='UTF-8') as file:
-        questionBanks = yaml.safe_load(file)
+    with open('Question-Banks.json', 'r', encoding='UTF-8') as file:
+        questionBanks = json.load(file)
 
     cookies = input('键入 cookies, 形如: {"响应 Cookie":{...},"请求 Cookie":{"csrftoken":"123abc",'
                     '"Hm_lpvt_123":"1574858254","sessionid":"123abc"}}:\n')
