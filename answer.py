@@ -117,7 +117,8 @@ if __name__ == '__main__':
         questionContent = re.sub(r'q-cnt crt">[0-9]+、<span>\[[0-9]+分\]', '', questionContent)
         if '<input type="text">' in questionContent:
             # 填空题
-            questionContent = re.sub(r'<.+?>', '``', questionContent, flags=re.S)
+            questionContent = re.sub(r'<input.+?>', '``', questionContent, flags=re.S)
+            questionContent = re.sub(r'<.+?>', '', questionContent, flags=re.S)
             questionContent = onlyKeepChineseChars(questionContent)
             questionContent = questionContent.replace('``', '_')
             addAnswer(questionContent)
@@ -130,7 +131,7 @@ if __name__ == '__main__':
             for option in re.findall('<li>(.+?)</li>', questionContent):
                 option = re.sub(r'<.+?>', '', option, flags=re.S)
                 option = onlyKeepChineseChars(option)
-                option = re.sub('^[ABCDEFG][、.]', '', option)
+                option = re.sub(r'^[ABCDEFG][、.]?', '', option)
                 options.append(option)
             options.sort()
             key = '_'.join((questionI, *options))
