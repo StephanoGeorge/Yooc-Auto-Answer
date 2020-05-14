@@ -72,7 +72,9 @@ def submitAnswer(sessionI, detailUrlI, answersI):
 
 
 def onlyKeepChineseChars(string):
-    return re.sub(r'[^\u4e00-\u9fa5.a-zA-Z0-9]', '', string)
+    string = re.sub(r'[^\u4e00-\u9fa5.`a-zA-Z0-9]', '', string)
+    string = re.sub(r'((?<=[^0-9])\.)|(\.(?=[^0-9]))', '', string)
+    return string
 
 
 if __name__ == '__main__':
@@ -115,8 +117,9 @@ if __name__ == '__main__':
         questionContent = re.sub(r'q-cnt crt">[0-9]+、<span>\[[0-9]+分\]', '', questionContent)
         if '<input type="text">' in questionContent:
             # 填空题
-            questionContent = re.sub(r'<.+?>', '_', questionContent, flags=re.S)
+            questionContent = re.sub(r'<.+?>', '``', questionContent, flags=re.S)
             questionContent = onlyKeepChineseChars(questionContent)
+            questionContent = questionContent.replace('``', '_')
             addAnswer(questionContent)
         else:
             # 选择题/判断题
