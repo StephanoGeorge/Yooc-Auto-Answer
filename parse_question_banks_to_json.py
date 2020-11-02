@@ -1,8 +1,7 @@
 # -*- coding: UTF-8 -*-
+import json
 import re
 from pathlib import Path
-
-import json
 
 
 def parseQuestionsFromTxt(questionBanksI):
@@ -16,12 +15,12 @@ def parseQuestionsFromTxt(questionBanksI):
     questionBanksI = re.sub(r'((?<=[^0-9])\.)|(\.(?=[^0-9]))', '', questionBanksI, flags=re.M)
     questionBanksI = re.sub(r'[^\u4e00-\u9fa5. ()\[\]a-zA-Z0-9\n]', '', questionBanksI)
     questionBanksI = re.sub(r'(?<=[^\n]\n)([ABCDEFG])', r'`\1`', questionBanksI, flags=re.M)
-    questionBanksI = re.sub(r'(?<=\n\n)[0-9]+\.?', '', questionBanksI)
-    questionBanksI = re.sub(r'^[0-9]+\.?', '', questionBanksI)
+    questionBanksI = re.sub(r'(?<=\n\n)[0-9]+\.', '', questionBanksI)
+    questionBanksI = re.sub(r'^[0-9]+\.', '', questionBanksI)
     questionBanksI = re.sub(r'(?<=[^\n]\n)[(\[]([Xx ])[)\]]', r'`\1`', questionBanksI, flags=re.M)
-    questionBanksI = re.sub(r'(参考)?(答案)?(?P<answer>[ABCDEFG]+)$', r'`!\g<answer>`!', questionBanksI, flags=re.M)
-    questionBanksI = re.sub(r'(参考)?(答案)?(?P<answer>[对错])$', r'`!\g<answer>`!', questionBanksI, flags=re.M)
-    questionBanksI = re.sub(r'\((?P<answer>[ABCDEFG对错]+)\)', r'`!\g<answer>`!', questionBanksI, flags=re.M)
+    questionBanksI = re.sub(r'(参考)?答案(?P<answer>[ABCDEFG]+)$', r'`!\g<answer>`!', questionBanksI, flags=re.M)
+    questionBanksI = re.sub(r'(参考)?答案(?P<answer>[对错X])$', r'`!\g<answer>`!', questionBanksI, flags=re.M)
+    questionBanksI = re.sub(r'\((?P<answer>[ABCDEFG对错X]+)\)', r'`!\g<answer>`!', questionBanksI, flags=re.M)
     questionBanksI = re.sub(r'[\[\]]', '', questionBanksI)
     questionsBanksDict = {}
 
@@ -37,19 +36,17 @@ def parseQuestionsFromTxt(questionBanksI):
             return '_'
 
         searchAnswer = re.search(r'`!(.+?)`!', questionBank)
-        if searchAnswer is None:
-            if len(lines) != 1:
-                # 无答案
-                continue
-            # 填空题
-            question = re.sub(r'\((.+?)\)', processAnswer, questionBank)
-            questionsBanksDict[question] = answers
-            continue
         if len(lines) == 1:
-            # 判断题
-            answers.append(searchAnswer.group(1))
-            question = questionBank[:searchAnswer.span()[0]]
-            question = re.sub(r'[()]', '', question)
+            if searchAnswer is None:
+                # 内联答案的填空题
+                question = re.sub(r'\((.+?)\)', processAnswer, questionBank)
+                questionsBanksDict[question] = answers
+                continue
+            else:
+                # 判断题
+                answers.append(searchAnswer.group(1))
+                question = questionBank[:searchAnswer.span()[0]]
+                question = re.sub(r'[()]', '', question)
         else:
             for indexN, line in enumerate(lines):
                 lines[indexN] = re.sub(r'[()]', '', line)
@@ -72,7 +69,7 @@ def parseQuestionsFromTxt(questionBanksI):
             # 纠正错误分割的题目
             for index, option in enumerate(options):
                 searchIndex = re.search(r'^`(ABCDEFG)`', option)
-                if searchIndex is not None and ord(option[0]) + 17 != index + 48:
+                if searchIndex is not None and ord(option[0]) + ord('A') - ord('0') != index + ord('0'):
                     questionBanksII.append(questionBank.replace('\n{}'.format(option), option))
                     nextQuestionBank = True
                     break
@@ -89,12 +86,11 @@ def parseQuestionsFromTxt(questionBanksI):
                                 answers.append(str(indexI))  # 0, 1, 2
             for indexII, optionII in enumerate(options):
                 options[indexII] = re.sub(r'^`.`', '', optionII)
-        if answers[0] in '对错':
+        if answers[-2:] == ['对', '错']:
             options = ['对', '错']
             answers[0] = '0' if answers[0] == '对' else '1'
         elif re.search(r'[0-9]', answers[0]) is None:
-            # ord('0') - ord('A') = 17
-            answers = [chr(ord(i) - 17) for i in answers]
+            answers = [chr(ord(i) - ord('A') - ord('0')) for i in answers]
         options.sort()  # 保证统一
         # {'题目_选项': ['0', '1', '2']}
         questionsBanksDict['_'.join((question, *options))] = answers

@@ -91,8 +91,7 @@ if __name__ == '__main__':
     with open('Question-Banks.json', 'r', encoding='UTF-8') as file:
         questionBanks = json.load(file)
 
-    cookies = input('键入 cookies, 形如: {"响应 Cookie":{...},"请求 Cookie":{"csrftoken":"123abc",'
-                    '"Hm_lpvt_123":"1574858254","sessionid":"123abc"}}:\n')
+    cookies = input('键入 cookies, 形如: {"csrftoken":"123abc","Hm_lpvt_123":"1574858254","sessionid":"123abc"}\n')
     session.cookies.update(json.loads(cookies))
 
     examsUrl = input('键入在线测试页面 URL, 形如: https://www.yooc.me/group/123456/exams:\n')
