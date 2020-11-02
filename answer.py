@@ -123,7 +123,6 @@ if __name__ == '__main__':
             continue
         questionContent = '_'.join(question.xpath('./p[2]/text()'))
         questionContent = onlyKeepChineseChars(questionContent)
-        print(f'<{questionContent}>')
         if question.xpath(".//input[@type='text']"):
             # 填空题
             addAnswer(questionContent)
