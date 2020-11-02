@@ -5,6 +5,7 @@ import time
 from pathlib import Path
 from random import random
 
+import pyperclip
 import requests
 from fuzzywuzzy import process
 from simplejson import JSONDecodeError
@@ -83,15 +84,19 @@ if __name__ == '__main__':
           '\u4f7f\u7528\u95f4\u9694\u5fc5\u987b'
           '\u5927\u4e8e\u4e94\u5c0f\u65f6')
     session = requests.Session()
-    if fileI.exists():
-        with fileI.open() as f:
-            r = float(f.read())
-            if r != 0 and time.time() - r < 18e3:
-                quit()
+    try:
+        if fileI.exists():
+            with fileI.open() as f:
+                r = float(f.read())
+                if r != 0 and time.time() - r < 18e3:
+                    quit()
+    except Exception:
+        pass
     with open('Question-Banks.json', 'r', encoding='UTF-8') as file:
         questionBanks = json.load(file)
 
-    cookies = input('键入 cookies, 形如: {"csrftoken":"123abc","Hm_lpvt_123":"1574858254","sessionid":"123abc"}\n')
+    input('键入回车以从剪贴板中读取 cookies, 形如: {"csrftoken":"123abc","Hm_lpvt_123":"1574858254","sessionid":"123abc"}\n')
+    cookies = pyperclip.paste()
     session.cookies.update(json.loads(cookies))
 
     examsUrl = input('键入在线测试页面 URL, 形如: https://www.yooc.me/group/123456/exams:\n')
@@ -145,5 +150,8 @@ if __name__ == '__main__':
             break
     print(submitAnswer(session, detailUrl, answers).json()['message'])
     if r != 0:
-        with fileI.open('w') as f:
-            f.write(str(time.time()))
+        try:
+            with fileI.open('w') as f:
+                f.write(str(time.time()))
+        except Exception:
+            pass
