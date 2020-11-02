@@ -8,6 +8,7 @@ from random import random
 import pyperclip
 import requests
 from fuzzywuzzy import process
+from lxml import etree
 from simplejson import JSONDecodeError
 
 headers = {
@@ -38,7 +39,10 @@ def getDetailUrl(examsUrlI, sessionI):
     examHtmlI = sessionI.get(examsUrlI).text
     time.sleep(0 + random() * 1)  # 睡眠 [0, 1]s
     repeatUrl = re.search(r'repeat-url="(.+?)">重做试卷', examHtmlI)
-    if repeatUrl is not None:
+    if repeatUrl is None:
+        return re.search(r'href="(.+?)" id="start-exam" class="start-exam" target="_blank">'
+                         r'开始考试', examHtmlI).group(1)
+    else:
         response = sessionI.post(
             repeatUrl.group(1),
             headers={**getPostHeaders(examsUrlI, sessionI), 'Content-Type': 'application/json; charset=utf-8'},
@@ -49,11 +53,6 @@ def getDetailUrl(examsUrlI, sessionI):
         except JSONDecodeError:
             with Path('log', 'exams-JSONDecodeError-{}.html'.format(time.time()), 'w', encoding='UTF-8').open() as fi:
                 fi.write(response.text)
-    else:
-        with Path('log', 'exams-{}.html'.format(time.time())).open('w', encoding='UTF-8') as fi:
-            fi.write(examHtmlI)
-        return re.search(r'href="(.+?)" id="start-exam" class="start-exam" target="_blank">'
-                         r'开始考试', examHtmlI).group(1)
 
 
 def addAnswer(keyI):
@@ -62,7 +61,7 @@ def addAnswer(keyI):
     else:
         # 模糊匹配
         possibleKey = process.extractOne(keyI, questionBanks['parsed'].keys())
-        print('key: {}\npossibleKey: {}'.format(keyI, possibleKey), end='\n\n')
+        print('key in HTML: {}\npossible key in JSON: {}'.format(keyI, possibleKey), end='\n\n')
         answers.append({questionId: {'1': questionBanks['parsed'][possibleKey[0]]}})
 
 
@@ -80,7 +79,7 @@ def submitAnswer(sessionI, detailUrlI, answersI):
 
 
 def onlyKeepChineseChars(string):
-    string = re.sub(r'[^\u4e00-\u9fa5.`a-zA-Z0-9]', '', string)
+    string = re.sub(r'[^\u4e00-\u9fa5._`a-zA-Z0-9]', '', string)
     string = re.sub(r'((?<=[^0-9])\.)|(\.(?=[^0-9]))', '', string)
     return string
 
@@ -109,52 +108,44 @@ if __name__ == '__main__':
     input('键入回车以从剪贴板中读取在线测试页面 URL, 形如: https://www.yooc.me/group/123456/exams')
     examsUrl = pyperclip.paste()
     detailUrl = getDetailUrl(examsUrl, session)
-    examHtml = session.get(detailUrl, headers={'Referer': examsUrl}).text
-    with Path('log', 'detail-{}.html'.format(time.time())).open('w', encoding='UTF-8') as f:
-        f.write(examHtml)
+    detailHtml = session.get(detailUrl, headers={'Referer': examsUrl}).text
+    detailHtml = etree.HTML(detailHtml)
     startTime = time.time()
-    examHtml = examHtml.replace('\n', '')
     print('\n开始答题\n\n')
     answers = []  # 要提交的答案
 
-    for question in re.findall(r'question-board" id="question-([0-9]+?)">(.+?)</div>', examHtml):
+    for question in detailHtml.xpath("//div[@class='question-board']"):
         answer = []
-        questionId = question[0]
-        questionContent = question[1]
+        questionId = question.get('id')
+        questionId = questionId[questionId.index('-') + 1:]
         if questionId in questionBanks['collected']:
             answers.append({questionId: {'1': questionBanks['collected'][questionId]}})
             continue
-        questionContent = re.sub(r'q-cnt crt">[0-9]+、<span>\[[0-9]+分\]', '', questionContent)
-        if '<input type="text">' in questionContent:
+        questionContent = '_'.join(question.xpath('./p[2]/text()'))
+        questionContent = onlyKeepChineseChars(questionContent)
+        print(f'<{questionContent}>')
+        if question.xpath(".//input[@type='text']"):
             # 填空题
-            questionContent = re.sub(r'<input.+?>', '``', questionContent, flags=re.S)
-            questionContent = re.sub(r'<.+?>', '', questionContent, flags=re.S)
-            questionContent = onlyKeepChineseChars(questionContent)
-            questionContent = questionContent.replace('``', '_')
             addAnswer(questionContent)
         else:
             # 选择题/判断题
-            questionI = re.search('q-cnt crt">(.+?)</p>', questionContent).group(1)
-            questionI = re.sub(r'<.+?>', '', questionI, flags=re.S)
-            questionI = onlyKeepChineseChars(questionI)
             options = []
-            for option in re.findall('<li>(.+?)</li>', questionContent):
-                option = re.sub(r'<.+?>', '', option, flags=re.S)
+            for option in question.xpath('.//label/text()'):
                 option = onlyKeepChineseChars(option)
                 option = re.sub(r'^[ABCDEFG][、.]?', '', option)
                 options.append(option)
             options.sort()
-            key = '_'.join((questionI, *options))
+            key = '_'.join((questionContent, *options))
             addAnswer(key)
 
     while True:
         try:
-            print('\r已经开考 {} s, 键入 Ctrl + C 以提交'.format(round(time.time() - startTime)), end='', flush=True)
+            print('\r已经开考 {} s, 键入 ^C 以提交'.format(round(time.time() - startTime)), end='', flush=True)
             time.sleep(1)
         except KeyboardInterrupt:
             print()
             break
-    print(submitAnswer(session, detailUrl, answers).json()['message'])
+    print(submitAnswer(session, 'detailUrl', answers).json()['message'])
     if r != 0:
         try:
             with fileI.open('w') as f:

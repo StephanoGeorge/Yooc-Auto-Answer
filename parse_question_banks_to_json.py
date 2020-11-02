@@ -13,7 +13,7 @@ def parseQuestionsFromTxt(questionBanksI):
     questionBanksI = re.sub(r'((?<=[^(\[]) )|( (?=[^)\]]))', '', questionBanksI)
     questionBanksI = re.sub(r'(?<![^\n]\n)\( \)', '', questionBanksI)
     questionBanksI = re.sub(r'((?<=[^0-9])\.)|(\.(?=[^0-9]))', '', questionBanksI, flags=re.M)
-    questionBanksI = re.sub(r'[^\u4e00-\u9fa5. ()\[\]a-zA-Z0-9\n]', '', questionBanksI)
+    questionBanksI = re.sub(r'[^\u4e00-\u9fa5. _()\[\]a-zA-Z0-9\n]', '', questionBanksI)
     questionBanksI = re.sub(r'(?<=[^\n]\n)([ABCDEFG])', r'`\1`', questionBanksI, flags=re.M)
     questionBanksI = re.sub(r'(?<=\n\n)[0-9]+\.', '', questionBanksI)
     questionBanksI = re.sub(r'^[0-9]+\.', '', questionBanksI)
@@ -114,7 +114,7 @@ def parseQuestionsFromHtml(questions):
         question = re.sub(r'<span[\n\s]+class="cls_00[57]">.+?</span>', '', question)
         question = re.sub(r'<.+?>', '', question, flags=re.S)
         # 只保留汉字,数字,字母等字符, 适用于填空题
-        question = re.sub(r'[^\u4e00-\u9fa5.a-zA-Z0-9]', '', question)
+        question = re.sub(r'[^\u4e00-\u9fa5._a-zA-Z0-9]', '', question)
         questions[question] = answers
     return questions
 
