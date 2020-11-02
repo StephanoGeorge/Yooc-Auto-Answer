@@ -102,11 +102,11 @@ if __name__ == '__main__':
     with open('Question-Banks.json', 'r', encoding='UTF-8') as file:
         questionBanks = json.load(file)
 
-    input('键入回车以从剪贴板中读取 cookies, 形如: {"csrftoken":"123abc","Hm_lpvt_123":"1574858254","sessionid":"123abc"}\n')
+    input('键入回车以从剪贴板中读取 cookies, 形如: {"csrftoken":"123abc","Hm_lpvt_123":"1574858254","sessionid":"123abc"}')
     cookies = pyperclip.paste()
     session.cookies.update(json.loads(cookies))
 
-    examsUrl = input('键入在线测试页面 URL, 形如: https://www.yooc.me/group/123456/exams:\n')
+    examsUrl = input('键入回车以从剪贴板中读取在线测试页面 URL, 形如: https://www.yooc.me/group/123456/exams')
 
     session.headers.update(headers)
     detailUrl = getDetailUrl(examsUrl, session)
