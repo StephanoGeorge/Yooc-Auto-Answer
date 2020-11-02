@@ -10,24 +10,28 @@ import requests
 from fuzzywuzzy import process
 from simplejson import JSONDecodeError
 
-headers = {'Host': 'www.yooc.me',
-           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3835.0 Safari/537.36',
-           'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-           'Accept-Language': 'zh-CN,zh;q=0.8,zh-TW;q=0.7,zh-HK;q=0.5,en-US;q=0.3,en;q=0.2',
-           'Accept-Encoding': 'gzip, deflate',
-           'DNT': '1',
-           'Connection': 'keep-alive',
-           'Upgrade-Insecure-Requests': '1',
-           'Pragma': 'no-cache',
-           'Cache-Control': 'no-cache'}
+headers = {
+    'Host': 'www.yooc.me',
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3835.0 Safari/537.36',
+    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+    'Accept-Language': 'zh-CN,zh;q=0.8,zh-TW;q=0.7,zh-HK;q=0.5,en-US;q=0.3,en;q=0.2',
+    'Accept-Encoding': 'gzip, deflate',
+    'DNT': '1',
+    'Connection': 'keep-alive',
+    'Upgrade-Insecure-Requests': '1',
+    'Pragma': 'no-cache',
+    'Cache-Control': 'no-cache'
+}
 
 
 def getPostHeaders(refererUrl, sessionM):
-    return {'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-            'Origin': 'https://www.yooc.me',
-            'Referer': refererUrl,
-            'X-CSRFToken': sessionM.cookies.get('csrftoken', domain=''),
-            'X-Requested-With': 'XMLHttpRequest'}
+    return {
+        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+        'Origin': 'https://www.yooc.me',
+        'Referer': refererUrl,
+        'X-CSRFToken': sessionM.cookies.get('csrftoken', domain=''),
+        'X-Requested-With': 'XMLHttpRequest'
+    }
 
 
 def getDetailUrl(examsUrlI, sessionI):
@@ -35,11 +39,12 @@ def getDetailUrl(examsUrlI, sessionI):
     time.sleep(0 + random() * 1)  # 睡眠 [0, 1]s
     repeatUrl = re.search(r'repeat-url="(.+?)">重做试卷', examHtmlI)
     if repeatUrl is not None:
+        response = sessionI.post(
+            repeatUrl.group(1),
+            headers={**getPostHeaders(examsUrlI, sessionI), 'Content-Type': 'application/json; charset=utf-8'},
+            data={'csrfmiddlewaretoken': sessionI.cookies.get('csrftoken', domain='')}
+        )
         try:
-            response = sessionI.post(repeatUrl.group(1),
-                                     headers={**getPostHeaders(examsUrlI, sessionI),
-                                              'Content-Type': 'application/json; charset=utf-8'},
-                                     data={'csrfmiddlewaretoken': sessionI.cookies.get('csrftoken', domain='')})
             return response.json()['url']
         except JSONDecodeError:
             with Path('log', 'exams-JSONDecodeError-{}.html'.format(time.time()), 'w', encoding='UTF-8').open() as fi:
@@ -62,14 +67,16 @@ def addAnswer(keyI):
 
 
 def submitAnswer(sessionI, detailUrlI, answersI):
-    return sessionI.post(detailUrlI.replace('detail', 'answer/submit'),
-                         headers=getPostHeaders(detailUrlI, sessionI),
-                         data={
-                             'csrfmiddlewaretoken': sessionI.cookies.get('csrftoken', domain=''),
-                             'answers': json.dumps(answersI),
-                             'type': '0',
-                             'auto': '0'
-                         })
+    return sessionI.post(
+        detailUrlI.replace('detail', 'answer/submit'),
+        headers=getPostHeaders(detailUrlI, sessionI),
+        data={
+            'csrfmiddlewaretoken': sessionI.cookies.get('csrftoken', domain=''),
+            'answers': json.dumps(answersI),
+            'type': '0',
+            'auto': '0'
+        }
+    )
 
 
 def onlyKeepChineseChars(string):
