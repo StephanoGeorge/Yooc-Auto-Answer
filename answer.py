@@ -91,6 +91,7 @@ if __name__ == '__main__':
           '\u4f7f\u7528\u95f4\u9694\u5fc5\u987b'
           '\u5927\u4e8e\u4e94\u5c0f\u65f6')
     session = requests.Session()
+    session.headers.update(headers)
     try:
         if fileI.exists():
             with fileI.open() as f:
@@ -105,10 +106,8 @@ if __name__ == '__main__':
     input('键入回车以从剪贴板中读取 cookies, 形如: {"csrftoken":"123abc","Hm_lpvt_123":"1574858254","sessionid":"123abc"}')
     cookies = pyperclip.paste()
     session.cookies.update(json.loads(cookies))
-
-    examsUrl = input('键入回车以从剪贴板中读取在线测试页面 URL, 形如: https://www.yooc.me/group/123456/exams')
-
-    session.headers.update(headers)
+    input('键入回车以从剪贴板中读取在线测试页面 URL, 形如: https://www.yooc.me/group/123456/exams')
+    examsUrl = pyperclip.paste()
     detailUrl = getDetailUrl(examsUrl, session)
     examHtml = session.get(detailUrl, headers={'Referer': examsUrl}).text
     with Path('log', 'detail-{}.html'.format(time.time())).open('w', encoding='UTF-8') as f:
